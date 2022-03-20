@@ -4,7 +4,7 @@
 
 이 글을 작성된 날(20.04.02) 기준  Spring Boot 최신 버전은 2.2.6 이다.  Spring Boot 에서 r2dbc를 추상해 놓은 Spring Data R2dbc가 존재한다. 하지만 최신 버전에서는 아직 사용할 수 없고 Spring Boot 2.3.0.M2 버전에서 사용 가능하다. 마일 스톤 버전을 받기 위해서는 플러그와  라이브리러리 Repostiory를 추가해줘야 된다.
 
-```
+```maven
  <parent>
  	<groupId>org.springframework.boot</groupId>
  	<artifactId>spring-boot-starter-parent</artifactId>
@@ -31,7 +31,7 @@
 
 테스트에 필수적인 라이브러리들을 추가한다. 개발 편의를 위해 lombok도 추가해줬다. 
 
-```
+```maven
 	<dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-r2dbc</artifactId>
@@ -60,7 +60,7 @@
 
 아래의 SQL 문을 참고해서 테스트를 위한 테이블 생성 및 데이터를 생성한다. 1000만 건 정도의 대용량 데이터를 입력한다.
 
-```
+```sql
 #테스트 테이블 생성
 create table m2sj_test
 (
@@ -80,7 +80,7 @@ SELECT random() from generate_series(1, 10000000);
 
 postgresql Connection Factory를 생성한다. @Repository 등록을 @EnableR2dbcRepositories 선언이 필요하다.
 
-```
+```java
 @Configuration
 @EnableR2dbcRepositories
 public class R2DBCConfiguration {
@@ -101,7 +101,7 @@ public class R2DBCConfiguration {
 
 엔터티로 사용할 RNumber 클래스이다. 테이블명과 클래스명이 다를 경우 @Table 명령어를 이용해서 명시적 선언이 필요하다.
 
-```
+```java
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -118,7 +118,7 @@ public class RNumber {
 
 ReactiveCrudRepository 를 상속받는 RnumberRepository 인터페이스이다. ReactiveCrudRepository 클래스에서 기본적인 조회 메서드를 이미 구현해놨기 때문에 별도의 조회 메서드 선언 없이 사용 가능하다.
 
-```
+```java
 @Repository
 public interface RNumberRepository extends ReactiveCrudRepository<RNumber, Long> {
 
@@ -132,7 +132,7 @@ public interface RNumberRepository extends ReactiveCrudRepository<RNumber, Long>
 
 [http://developer.mozilla.org/en-US/docs/Web/API/Server-sent\_events/Using\_server-sent\_events](http://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)
 
-```
+```java
 @RestController
 @RequestMapping(value = "/api/numbers")
 public class RNumberController {
@@ -159,7 +159,7 @@ public class RNumberController {
 
 만약 서버에서 서버로 Reactive 한 요청을 한다면 R2dbc 에서는 추상화된 클라이언트를 제공한다. 아래는 간단한 사용법이다. TimeUnit.SECONDS.sleep(10) 라인을 추가한건 일반적인 메인 함수로 실행했기 때문에 결과를 받아오기 전에 메인 쓰레드가 terminated 되는걸 기다리기 위해서이다.
 
-```
+```java
     public static void main(String[] args) throws InterruptedException {
         final PostgresqlConnectionFactory postgresqlConnectionFactory = new PostgresqlConnectionFactory(
                 PostgresqlConnectionConfiguration.builder()
